@@ -32,54 +32,6 @@ fi
 # #
 # # fi
 
-###
-### Start of un-native installer script (When NATIVE_INSTALL is false)
-###
-
-
-# Define vars
-DALVIKDIR="/data/dalvik-cache"
-MESA_BACKUP_DIR="$STATDIR/_mesaBackup"
-MESA_BACKUP_FILE="$STATDIR/mesa_stock.bak"
-GBSCRIPT="$GBDIR/init/ClearDalvikForKernelUpdate"
-
-# Define functions
-handleError ()
-{ 
-
-	if [ $? != 0 ]; then
-		# TODO: Revert back any incomplete changes
-		geco "\n[!!!] Error: $1" && exit ${2:-101}
-	fi
-
-}
-
-mesa_native()
-{
-	
-	"$CORE/gxpm/mesa-native/job" "$@"
-	
-}
-
-make_gbscript_clearDalvik ()
-{
-
-cat << EOF > "${GBSCRIPT}"
-
-## Dalvik cache cleaning gearboot script for live system installation
-######################################################################
-
-test -d "$DALVIKDIR" && geco "--+ Clearing dalvik-cache, it may take a bit long on this bootup" && rm -rf "$DALVIKDIR"/*
-rm "\$0"
-
-EOF
-
-}
-
-
-##
-## Main
-##
 
 # Do not allow GearLock versions below 6.7.7
 # # if ! check_compat 6.7.7; then geco "+\n Please update GearLock to install this"; exit 101; fi
@@ -91,32 +43,83 @@ test "$BOOTCOMP" == "yes" && geco "[!!!] You seem to be installing from a live s
 # Check if /system is writable
 ! touch -c "$SYSTEM_DIR/lib" >/dev/null 2>&1 && geco "[!!!] $SYSTEM_DIR is not writable, did you ${PINK}SuperCharge${RC} it yet ?" && exit 101
 
-# Backup mesa
-if [ ! -f "$MESA_BACKUP_FILE" ]; then
-	geco "\n+ Backing up stock Mesa dri & dependencies ..."
-	mesa_native backup "$MESA_BACKUP_DIR"
-	geco ">>>>>> Compressing backup ..."
-	( cd "$MESA_BACKUP_DIR"; tar --zstd -cpf "$MESA_BACKUP_FILE" system ); handleError "Failed to backup current Mesa"
-	rm -rf "$MESA_BACKUP_DIR"
-fi
 
-# Cleanup mesa
-geco "\n+ Cleaning up existing Mesa dri & dependencies ..." && mesa_native clean
 
-# Merge mesa
-geco "\n+ Merging new Mesa dri & dependencie files in your operating-system"
-gclone "$BD/system" "$SYSTEM_DIR"; handleError "Failed to place files"
+function make_gbscript_updateMesa ()
+{
 
-# Symlink dri
-geco "\n+ Symlinking dri directories if needed ..." && sleep 1
-for libX in lib lib64; do
-	[ -e "$SYSTEM_DIR/$libX/dri" ] && [ ! -e "$SYSTEM_DIR/vendor/$libX/dri" ] && ln -srf "$SYSTEM_DIR/$libX/dri" "$SYSTEM_DIR/vendor/$libX/dri"
-	[ -e "$SYSTEM_DIR/vendor/$libX/dri" ] && [ ! -e "$SYSTEM_DIR/$libX/dri" ] && ln -srf "$SYSTEM_DIR/vendor/$libX/dri" "$SYSTEM_DIR/$libX/dri"
-done
+	type main | tail -n+2 > "$GBSCRIPT"
+	geco "\nmain \"\$STATDIR/UpdateMesa\"" >> "$GBSCRIPT"
 
-# Clear dalvik-cache
-if test "$TERMINAL_EMULATOR" != "yes" && test -d "$DALVIKDIR"; then
-	geco "\n+ Clearing dalvik-cache, it may take a bit long on your next boot" && rm -rf "$DALVIKDIR"/*
-elif test "$TERMINAL_EMULATOR" == "yes" && test -d "$DALVIKDIR"; then
-	make_gbscript_clearDalvik
-fi
+}
+
+function main ()
+{
+
+	# Define vars
+	DALVIKDIR="/data/dalvik-cache"
+	MESA_BACKUP_DIR="$STATDIR/_mesaBackup"
+	MESA_BACKUP_FILE="$STATDIR/mesa_stock.bak"
+	GBSCRIPT="$GBDIR/init/UpdateMesa"
+	MESA_SOURCE="${1:-"$BD/system"}"
+
+	# Define functions
+	handleError ()
+	{ 
+	
+		if [ $? != 0 ]; then
+			# TODO: Revert back any incomplete changes
+			geco "\n[!!!] Error: $1" && exit ${2:-101}
+		fi
+	
+	}
+
+	mesa_native ()
+	{
+		
+		"$CORE/gxpm/mesa-native/job" "$@"
+		
+	}
+
+
+	rm -f "$GBSCRIPT" # Make sure no early GBSCRIPT exists
+	if test "$TERMINAL_EMULATOR" == "yes"; then
+	
+		geco "[!!!] You seem to be installing from a live system, best practice is to install from RECOVERY-MODE.\n"
+		geco "\n+ Placing new Mesa dri & dependencie files in your operating-system for BOOT-UPDATE"
+		gclone "$MESA_SOURCE/" "$STATDIR/UpdateMesa"; handleError "Failed to place files"
+		make_gbscript_updateMesa
+    
+	else
+		
+		# Backup mesa
+		if [ ! -f "$MESA_BACKUP_FILE" ]; then
+			geco "\n+ Backing up stock Mesa dri & dependencies ..."
+			mesa_native backup "$MESA_BACKUP_DIR"
+			geco ">>>>>> Compressing backup ..."
+			( cd "$MESA_BACKUP_DIR"; tar --zstd -cpf "$MESA_BACKUP_FILE" system ); handleError "Failed to backup current Mesa"
+			rm -rf "$MESA_BACKUP_DIR"
+		fi
+
+		# Cleanup mesa
+		geco "\n+ Cleaning up existing Mesa dri & dependencies ..." && mesa_native clean
+
+		# Merge mesa
+		geco "\n+ Merging new Mesa dri & dependencie files in your operating-system"
+		gclone "$MESA_SOURCE/" "$SYSTEM_DIR"; handleError "Failed to place files"
+
+		# Symlink dri
+		geco "\n+ Symlinking dri directories if needed ..." && sleep 1
+		for libX in lib lib64; do
+			[ -e "$SYSTEM_DIR/$libX/dri" ] && [ ! -e "$SYSTEM_DIR/vendor/$libX/dri" ] && ln -srf "$SYSTEM_DIR/$libX/dri" "$SYSTEM_DIR/vendor/$libX/dri"
+			[ -e "$SYSTEM_DIR/vendor/$libX/dri" ] && [ ! -e "$SYSTEM_DIR/$libX/dri" ] && ln -srf "$SYSTEM_DIR/vendor/$libX/dri" "$SYSTEM_DIR/$libX/dri"
+		done
+
+		# Clear dalvik-cache
+		geco "\n+ Clearing dalvik-cache, it may take a bit long on your next boot" && rm -rf "$DALVIKDIR"/*
+		
+	fi
+
+}
+
+		main
