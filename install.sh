@@ -3,38 +3,36 @@
 ## For proper developer documentation, visit https://supreme-gamers.com/gearlock
 # Check `!zygote.sh` to configure your package functions or gearlock can also guide you during the build process.
 
-# Since GearLock 6.7.7 I decided to hold a native installation script inside gearlock/core instead.
-# To overcome the issue of needing to repack kernel packages just to update their install/uninstall scripts.
-# It's recommended that you use NATIVE_INSTALL, but if you prefer to add your own functions then you may set it to `false`. 
-NATIVE_INSTALL=true
-
 
 #####--- Import Functions ---#####
 get_base_dir # Returns execution directory path in $BD variable
-check_compat 6.7.7 # Returns yes in $COMPAT variable if the user is running at least 6.7.7 GearLock
+check_compat 6.8 # Returns yes in $COMPAT variable if the user is running at least 6.8 GearLock
 #####--- Import Functions ---#####
 
 
-# Load native scripts (When NATIVE_INSTALL is true)
-if test "$NATIVE_INSTALL" == "true"; then
-	rsync "$CORE/gxpm/mesa-native/uninstall.sh" "$BD/uninstall.sh"
-	rsync "$CORE/gxpm/mesa-native/install.sh" "$BD/install.sh" && exec "$BD/install.sh"
-fi
-
+# Since GearLock 6.8 I decided to hold native installation scripts inside gearlock/core instead.
+# To overcome the issue of needing to repack kernel packages just to update their install/uninstall scripts.
+# It's recommended that you use native-scripts, but if you prefer to add your own functions then you may remove/mask this line.
+## Load native scripts
+rsync "$CORE/gxpm/mesa-native/uninstall.sh" "$BD/uninstall.sh" && rsync "$CORE/gxpm/mesa-native/install.sh" "$BD/install.sh" && exec "$BD/install.sh"
 
 
 # Since building a mesa library which would work on any android version is quite impossible.
-# Thus you must verify the host system android version. An example is given below (variable ref: https://supreme-gamers.com/gearlock/environment-variables)
-# # if [[ "$ANDROID_VER" =~ [4-7] ]]; then
-# #
-# #     geco "\n+ You can not install this mesa build in android-${ANDROID_VER}"
-# #     exit 101 #(exit-code ref: https://supreme-gamers.com/gearlock/#install-sh-exit-code)
-# #
-# # fi
+# Thus we must verify the host system android version. An example is given below (variable ref: https://supreme-gamers.com/gearlock/environment-variables)
+
+MESA_ANDROID_VER="7" # Do not use a decimal number for this variable.
+if [[ ! "$ANDROID_VER" =~ "$MESA_ANDROID_VER" ]]; then
+	
+	geco "\n[!!!] This $VERSION Mesa3D drivers we're build for android-${ANDROID_VER}."
+	geco "[!!!] But your android version is ${ANDROID_VER}, which could be incompatible with it."
+	read -rn1 -p "$(geco "++++ Do you wish to proceed ? [y/${GREEN}N${RC}]") " c
+	test "${c,,}" != 'y' && exit 101 #(exit-code ref: https://supreme-gamers.com/gearlock/#install-sh-exit-code)
+	
+fi
 
 
-# Do not allow GearLock versions below 6.7.7
-# # if ! check_compat 6.7.7; then geco "+\n Please update GearLock to install this"; exit 101; fi
+# Do not allow GearLock versions below 6.8
+# # if ! check_compat 6.8; then geco "+[!!!] Please update GearLock to install this"; exit 101; fi
 test "$COMPAT" != "yes" && geco "\n[!!!] Please update GearLock to install this" && exit 101
 
 # Warning info for installation from GUI to avoid system crash
@@ -81,8 +79,9 @@ function main ()
 		
 	}
 
-
-	rm -f "$GBSCRIPT" # Make sure no early GBSCRIPT exists
+    # Remove any existing UpdateMesa job
+	rm -rf "$GBSCRIPT" "$STATDIR/UpdateMesa"
+	
 	if test "$TERMINAL_EMULATOR" == "yes"; then
 	
 		geco "\n+ Placing new Mesa dri & dependencie files in your operating-system for BOOT-UPDATE"

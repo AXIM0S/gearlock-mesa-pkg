@@ -36,7 +36,7 @@ if [ "$TERMINAL_EMULATOR" == "yes" ]; then
 	geco "+ You can still run GearLock in ${PURPLE}TTY${RC} and uninstall from there but it's not recommended.\n"
 	while true
 	do
-		read -n1 -p "$(geco "Do you want to switch to ${BGREEN}TTY${RC} and uninstall from there ? [${GREEN}Y${RC}/n]") " i
+		read -rn1 -p "$(geco "Do you want to switch to ${BGREEN}TTY${RC} and uninstall from there ? [${GREEN}Y${RC}/n]") " i
 		case $i in
 					
 			[Yy] ) geco "\n\n+ Switching to TTY GearLock GXPM ..." && sleep 2
@@ -61,5 +61,5 @@ test -e "$MESA_BACKUP_FILE"; handleError "Mesa backup archive not found"
 geco "\n+ Cleaning up current Mesa dri & dependencies ..." && mesa_native clean
 
 # Restore backup mesa
-geco "\+ Restoring stock Mesa from backup archive ..."
-tar --zstd --strip-components=1 --directory="$SYSTEM_DIR" -xpf "$MESA_BACKUP_FILE"; handleError "Failed to restore stock Mesa from backup archive"
+geco "\n+ Restoring stock Mesa from backup archive ..."
+tar --zstd --strip-components=1 --warning=no-timestamp --directory="$SYSTEM_DIR" -xpf "$MESA_BACKUP_FILE"; handleError "Failed to restore stock Mesa from backup archive"
