@@ -14,7 +14,7 @@ check_compat 6.8 # Returns yes in $COMPAT variable if the user is running at lea
 # To overcome the issue of needing to repack kernel packages just to update their install/uninstall scripts.
 # It's recommended that you use native-scripts, but if you prefer to add your own functions then you may remove/mask this line.
 ## Load native scripts
-rsync "$CORE/gxpm/mesa-native/uninstall.sh" "$BD/uninstall.sh" && rsync "$CORE/gxpm/mesa-native/install.sh" "$BD/install.sh" && exec "$BD/install.sh"
+# rsync "$CORE/gxpm/mesa-native/uninstall.sh" "$CORE/gxpm/mesa-native/install.sh" "$BD" && exec "$BD/install.sh"
 
 
 # Since building a mesa library which would work on any android version is quite impossible.
@@ -79,15 +79,16 @@ function main ()
 		
 	}
 
-    # Remove any existing UpdateMesa job
-	rm -rf "$GBSCRIPT" "$STATDIR/UpdateMesa"
+
 	
 	if test "$TERMINAL_EMULATOR" == "yes"; then
 	
+		# Remove any pre-existing UpdateMesa job
+		rm -rf "$GBSCRIPT" "$STATDIR/UpdateMesa"  
 		geco "\n+ Placing new Mesa dri & dependencie files in your operating-system for BOOT-UPDATE"
 		gclone "$MESA_SOURCE/" "$STATDIR/UpdateMesa"; handleError "Failed to place files"
 		make_gbscript_updateMesa
-    
+	
 	else
 		
 		# Backup mesa
@@ -116,7 +117,7 @@ function main ()
 		# Clear dalvik-cache
 		geco "\n+ Clearing dalvik-cache, it may take a bit long on your next boot" && rm -rf "$DALVIKDIR"/*
 		
-		# Remove any existing UpdateMesa job
+		# Remove any pre-existing UpdateMesa job
 		rm -rf "$GBSCRIPT" "$STATDIR/UpdateMesa"
 		
 	fi

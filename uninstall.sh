@@ -7,9 +7,10 @@
 
 
 # Define vars
+TTY_NUM="$(fgconsole)"
 DALVIKDIR="/data/dalvik-cache"
+GBSCRIPT="$GBDIR/init/UpdateMesa"
 MESA_BACKUP_FILE="$STATDIR/mesa_stock.bak"
-GBSCRIPT="$GBDIR/init/ClearDalvikForKernelUpdate"
 
 # Define functions
 handleError ()
@@ -51,6 +52,9 @@ if [ "$TERMINAL_EMULATOR" == "yes" ]; then
 	done
 fi
 
+# A workaround to retrun back to initial tty when booted android system crashes and switches to tty7
+test "$BOOTCOMP" == "yes" && (while sleep 2; do test "$(fgconsole)" != "$TTY_NUM" && chvt "$TTY_NUM"; done) &
+
 # Check if /system is writable
 ! touch -c "$SYSTEM_DIR/lib" >/dev/null 2>&1 && geco "[!!!] $SYSTEM_DIR is not writable, did you ${PINK}SuperCharge${RC} it yet ?" && exit 101
 
@@ -63,3 +67,9 @@ geco "\n+ Cleaning up current Mesa dri & dependencies ..." && mesa_native clean
 # Restore backup mesa
 geco "\n+ Restoring stock Mesa from backup archive ..."
 tar --zstd --strip-components=1 --warning=no-timestamp --directory="$SYSTEM_DIR" -xpf "$MESA_BACKUP_FILE"; handleError "Failed to restore stock Mesa from backup archive"
+
+# Clear dalvik-cache
+test -d "$DALVIKDIR" && geco "\n+ Clearing dalvik-cache, it may take a bit long on your next boot ..." && rm -rf "$DALVIKDIR"/*
+
+# Remove any existing UpdateMesa job
+rm -rf "$GBSCRIPT" "$STATDIR/UpdateMesa"
