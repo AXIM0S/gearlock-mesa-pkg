@@ -85,7 +85,6 @@ function main ()
 	rm -f "$GBSCRIPT" # Make sure no early GBSCRIPT exists
 	if test "$TERMINAL_EMULATOR" == "yes"; then
 	
-		geco "[!!!] You seem to be installing from a live system, best practice is to install from RECOVERY-MODE.\n"
 		geco "\n+ Placing new Mesa dri & dependencie files in your operating-system for BOOT-UPDATE"
 		gclone "$MESA_SOURCE/" "$STATDIR/UpdateMesa"; handleError "Failed to place files"
 		make_gbscript_updateMesa
@@ -117,6 +116,9 @@ function main ()
 
 		# Clear dalvik-cache
 		geco "\n+ Clearing dalvik-cache, it may take a bit long on your next boot" && rm -rf "$DALVIKDIR"/*
+		
+		# Remove any existing UpdateMesa job
+		rm -rf "$GBSCRIPT" "$STATDIR/UpdateMesa"
 		
 	fi
 
