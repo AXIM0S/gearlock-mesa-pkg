@@ -85,7 +85,7 @@ function main ()
 	
 		# Remove any pre-existing UpdateMesa job
 		rm -rf "$GBSCRIPT" "$STATDIR/UpdateMesa"  
-		geco "\n+ Placing new Mesa dri & dependencie files in your operating-system for BOOT-UPDATE"
+		geco "\n+ Placing new Mesa dri & dependencie files for BOOT-UPDATE"
 		gclone "$MESA_SOURCE/" "$STATDIR/UpdateMesa"; handleError "Failed to place files"
 		make_gbscript_updateMesa
 	
@@ -104,7 +104,7 @@ function main ()
 		geco "\n+ Cleaning up existing Mesa dri & dependencies ..." && mesa_native clean
 
 		# Merge mesa
-		geco "\n+ Merging new Mesa dri & dependencie files in your operating-system"
+		geco "\n+ Placing new Mesa dri & dependencie files in your operating-system"
 		gclone "$MESA_SOURCE/" "$SYSTEM_DIR"; handleError "Failed to place files"
 
 		# Symlink dri
