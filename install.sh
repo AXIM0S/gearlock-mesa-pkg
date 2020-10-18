@@ -10,11 +10,9 @@ check_compat 6.8 # Returns yes in $COMPAT variable if the user is running at lea
 #####--- Import Functions ---#####
 
 
-# Since GearLock 6.8 I decided to hold native installation scripts inside gearlock/core instead.
-# To overcome the issue of needing to repack kernel packages just to update their install/uninstall scripts.
-# It's recommended that you use native-scripts, but if you prefer to add your own functions then you may remove/mask this line.
-## Load native scripts
-rsync "$CORE/gxpm/mesa-native/uninstall.sh" "$CORE/gxpm/mesa-native/install.sh" "$BD" && exec "$BD/install.sh"
+# Do not allow GearLock versions below 6.8
+# # if ! check_compat 6.8; then geco "+[!!!] Please update GearLock to install this"; exit 101; fi
+test "$COMPAT" != "yes" && geco "\n[!!!] Please update GearLock to install this" && exit 101
 
 
 # Since building a mesa library which would work on any android version is quite impossible.
@@ -31,16 +29,19 @@ if [[ ! "$ANDROID_VER" =~ "$MESA_ANDROID_VER" ]]; then
 fi
 
 
-# Do not allow GearLock versions below 6.8
-# # if ! check_compat 6.8; then geco "+[!!!] Please update GearLock to install this"; exit 101; fi
-test "$COMPAT" != "yes" && geco "\n[!!!] Please update GearLock to install this" && exit 101
+# Since GearLock 6.8 I decided to hold native installation scripts inside gearlock/core instead.
+# To overcome the issue of needing to repack kernel packages just to update their install/uninstall scripts.
+# It's recommended that you use native-scripts, but if you prefer to add your own functions then you may remove/mask this line.
+## Load native scripts
+rsync "$CORE/gxpm/mesa-native/uninstall.sh" "$CORE/gxpm/mesa-native/install.sh" "$BD" && exec "$BD/install.sh"
+
+
 
 # Warning info for installation from GUI to avoid system crash
 test "$BOOTCOMP" == "yes" && geco "[!!!] You seem to be installing from a live system, best practice is to install from RECOVERY-MODE.\n"
 
 # Check if /system is writable
 ! touch -c "$SYSTEM_DIR/lib" >/dev/null 2>&1 && geco "[!!!] $SYSTEM_DIR is not writable, did you ${PINK}SuperCharge${RC} it yet ?" && exit 101
-
 
 
 function make_gbscript_updateMesa ()
