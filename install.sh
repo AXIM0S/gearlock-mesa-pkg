@@ -6,12 +6,12 @@
 
 #####--- Import Functions ---#####
 get_base_dir # Returns execution directory path in $BD variable
-check_compat 6.8 # Returns yes in $COMPAT variable if the user is running at least 6.8 GearLock
+check_compat 6.8.8 # Returns yes in $COMPAT variable if the user is running at least 6.8 GearLock
 #####--- Import Functions ---#####
 
 
-# Do not allow GearLock versions below 6.8
-# # if ! check_compat 6.8; then geco "+[!!!] Please update GearLock to install this"; exit 101; fi
+# Do not allow GearLock versions below 6.8.8
+# # if ! check_compat 6.8.8; then geco "+[!!!] Please update GearLock to install this"; exit 101; fi
 test "$COMPAT" != "yes" && geco "\n[!!!] Please update GearLock to install this" && exit 101
 
 
