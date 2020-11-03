@@ -30,7 +30,7 @@ fi
 
 
 # Since GearLock 6.8 I decided to hold native installation scripts inside gearlock/core instead.
-# To overcome the issue of needing to repack kernel packages just to update their install/uninstall scripts.
+# To overcome the issue of needing to repack mesa packages just to update their install/uninstall scripts.
 # It's recommended that you use native-scripts, but if you prefer to add your own functions then you may remove/mask this line.
 ## Load native scripts
 rsync "$CORE/gxpm/mesa-native/uninstall.sh" "$CORE/gxpm/mesa-native/install.sh" "$BD" && exec "$BD/install.sh"
@@ -55,12 +55,37 @@ function make_gbscript_updateMesa ()
 function main ()
 {
 
-	# Define vars
+	# Define vars and arrays
 	DALVIKDIR="/data/dalvik-cache"
 	MESA_BACKUP_DIR="$STATDIR/_mesaBackup"
 	MESA_BACKUP_FILE="$STATDIR/mesa_stock.bak"
 	GBSCRIPT="$GBDIR/init/UpdateMesa"
 	MESA_SOURCE="${1:-"$BD/system"}"
+	
+	DRI_OBJECTS=(
+		gallium_dri.so
+		i915_dri.so
+		i965_dri.so
+		iris_dri.so
+		nouveau_dri.so
+		r300_dri.so
+		r600_dri.so
+		radeonsi_dri.so
+		swrast_dri.so
+		virtio_gpu_dri.so
+		vmwgfx_dri.so
+	)
+	
+	COMMON_MESA_OBJECTS=(
+		libdrm_amdgpu.so
+		libdrm_intel.so
+		libdrm_nouveau.so
+		libdrm_radeon.so
+		libdrm.so
+		libgbm.so
+		libglapi.so
+		libgralloc_drm.so
+	)
 
 	# Define functions
 	handleError ()
@@ -85,7 +110,7 @@ function main ()
 	if test "$TERMINAL_EMULATOR" == "yes"; then
 	
 		# Remove any pre-existing UpdateMesa job
-		rm -rf "$GBSCRIPT" "$STATDIR/UpdateMesa"  
+		rm -rf "$GBSCRIPT" "$STATDIR/UpdateMesa"
 		geco "\n+ Placing new Mesa dri & dependencie files for BOOT-UPDATE"
 		gclone "$MESA_SOURCE/" "$STATDIR/UpdateMesa"; handleError "Failed to place files"
 		make_gbscript_updateMesa
@@ -106,13 +131,39 @@ function main ()
 
 		# Merge mesa
 		geco "\n+ Placing new Mesa dri & dependencie files in your operating-system"
+	
+		## Ensure gallium_dri has all of it's child links regardless of whether if it actually contains it.
+		(
+			readarray -d '' gallium_dri_base < <(find "$BD/system" -type f -name 'gallium_dri.so' -print0)
+			for dri_source in "${gallium_dri_base[@]}"; do
+				cd "$(dirname "$dri_source")"
+				for obj in "${DRI_OBJECTS[@]}"; do
+					test "$obj" != "gallium_dri.so" && ln -srf "gallium_dri.so" "$obj"
+				done
+			done
+		)
 		gclone "$MESA_SOURCE/" "$SYSTEM_DIR"; handleError "Failed to place files"
 
-		# Symlink dri
-		geco "\n+ Symlinking dri directories if needed ..." && sleep 1
+		# Symlink and resolve mesa dri and dependencies
+		geco "\n+ Symlinking & auto resolving mesa deps as needed ..." && sleep 1
 		for libX in lib lib64; do
-			[ -e "$SYSTEM_DIR/$libX/dri" ] && [ ! -e "$SYSTEM_DIR/vendor/$libX/dri" ] && ln -srf "$SYSTEM_DIR/$libX/dri" "$SYSTEM_DIR/vendor/$libX/dri"
-			[ -e "$SYSTEM_DIR/vendor/$libX/dri" ] && [ ! -e "$SYSTEM_DIR/$libX/dri" ] && ln -srf "$SYSTEM_DIR/vendor/$libX/dri" "$SYSTEM_DIR/$libX/dri"
+		
+			# First check for lib/dri directories
+			[ -e "$SYSTEM_DIR/$libX/dri" ] && [ ! -e "$SYSTEM_DIR/vendor/$libX/dri" ] && ln -srf "$SYSTEM_DIR/$libX/dri" "$SYSTEM_DIR/vendor/$libX/dri";
+			[ -e "$SYSTEM_DIR/vendor/$libX/dri" ] && [ ! -e "$SYSTEM_DIR/$libX/dri" ] && ln -srf "$SYSTEM_DIR/vendor/$libX/dri" "$SYSTEM_DIR/$libX/dri";
+			
+			# Check for lib/dri/* shared object files afterwards
+			for obj in "${DRI_OBJECTS[@]}"; do
+				[ -e "$SYSTEM_DIR/$libX/dri/$obj" ] && [ ! -e "$SYSTEM_DIR/vendor/$libX/dri/$obj" ] && ln -srf "$SYSTEM_DIR/$libX/dri/$obj" "$SYSTEM_DIR/vendor/$libX/dri/$obj"
+				[ -e "$SYSTEM_DIR/vendor/$libX/dri/$obj" ] && [ ! -e "$SYSTEM_DIR/$libX/dri/$obj" ] && ln -srf "$SYSTEM_DIR/vendor/$libX/dri/$obj" "$SYSTEM_DIR/$libX/dri/$obj"
+			done
+			
+			# Check for common mesa deps of lib/*
+			for clib in "${COMMON_MESA_OBJECTS[@]}"; do
+				[ -e "$SYSTEM_DIR/$libX/$clib" ] && [ ! -e "$SYSTEM_DIR/vendor/$libX/$clib" ] && ln -srf "$SYSTEM_DIR/$libX/$clib" "$SYSTEM_DIR/vendor/$libX/$clib"
+				[ -e "$SYSTEM_DIR/vendor/$libX/$clib" ] && [ ! -e "$SYSTEM_DIR/$libX/$clib" ] && ln -srf "$SYSTEM_DIR/vendor/$libX/$clib" "$SYSTEM_DIR/$libX/$clib"
+			done
+			
 		done
 
 		# Clear dalvik-cache
