@@ -21,7 +21,7 @@ test "$COMPAT" != "yes" && geco "\n[!!!] Please update GearLock to install this"
 MESA_ANDROID_VER="7" # Do not use a decimal number for this variable.
 if [[ ! "$ANDROID_VER" =~ "$MESA_ANDROID_VER" ]]; then
 	
-	geco "\n[!!!] This $VERSION Mesa3D drivers we're build for android-${MESA_ANDROID_VER}."
+	geco "\n[!!!] This $VERSION Mesa3D drivers were build for android-${MESA_ANDROID_VER}."
 	geco "[!!!] But your android version is ${ANDROID_VER}, which could be incompatible with it."
 	read -rn1 -p "$(geco "++++ Do you wish to proceed ? [y/${GREEN}N${RC}]") " c
 	test "${c,,}" != 'y' && exit 101 #(exit-code ref: https://supreme-gamers.com/gearlock/#install-sh-exit-code)
