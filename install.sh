@@ -138,7 +138,7 @@ function main ()
 			for dri_source in "${gallium_dri_base[@]}"; do
 				cd "$(dirname "$dri_source")"
 				for obj in "${DRI_OBJECTS[@]}"; do
-					test "$obj" != "gallium_dri.so" && ln -srf "gallium_dri.so" "$obj"
+					[ "$obj" != "gallium_dri.so" ] && [ "$obj" != "i915_dri.so" ] && [ "$obj" != "i965_dri.so" ] && ln -srf "gallium_dri.so" "$obj"
 				done
 			done
 		)
