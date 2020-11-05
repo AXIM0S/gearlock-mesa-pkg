@@ -134,7 +134,7 @@ function main ()
 	
 		## Ensure gallium_dri has all of it's child links regardless of whether if it actually contains it.
 		(
-			readarray -d '' gallium_dri_base < <(find "$BD/system" -type f -name 'gallium_dri.so' -print0)
+			readarray -d '' gallium_dri_base < <(find "$MESA_SOURCE" -type f -name 'gallium_dri.so' -print0)
 			for dri_source in "${gallium_dri_base[@]}"; do
 				cd "$(dirname "$dri_source")"
 				for obj in "${DRI_OBJECTS[@]}"; do
@@ -168,6 +168,9 @@ function main ()
 
 		# Clear dalvik-cache
 		geco "\n+ Clearing dalvik-cache, it may take a bit long on your next boot" && rm -rf "$DALVIKDIR"/*
+		
+		# Tell recovery mode reboot info
+		test -n "$RECOVERY" && geco "\n%% Rebooting is not required for mesa installation on recovery-mode, you can safely skip it if you like"
 		
 		# Remove any pre-existing UpdateMesa job
 		rm -rf "$GBSCRIPT" "$STATDIR/UpdateMesa"
