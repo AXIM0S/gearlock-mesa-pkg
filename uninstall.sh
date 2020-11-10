@@ -18,7 +18,7 @@ handleError ()
 
 	if [ $? != 0 ]; then
 		# TODO: Revert back any incomplete changes
-		geco "\n[!!!] Error: $1" && exit ${2:-101}
+		geco "\n[!!!] Error: $1" && return ${2:-101}
 	fi
 
 }
