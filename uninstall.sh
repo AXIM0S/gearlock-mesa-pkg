@@ -1,3 +1,4 @@
+#!/gearlock/bin/bash
 ## Ready to use mesa uninstallation script by @AXON
 ## For proper developer documentation, visit https://supreme-gamers.com/gearlock
 # You don't need to modify this `uninstall.sh`.

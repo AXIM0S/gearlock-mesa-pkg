@@ -30,7 +30,7 @@ C_EXTNAME="" #For Specifing a custom name for your extension script ($NAME is us
 
 REQSYNC="yes" #(Deafult - yes) To make sure all your files are properly written in disk
 
-REQREBOOT="yes" #(Deafult - no) Use if your package/extension modifies any major system file
+REQREBOOT="yes, no" #(Deafult - no, no [BOOTED-MODE, RECOVERY-MODE]) Require user to reboot
 
 GEN_UNINS="no" #(Deafult - no) If you want GearLock to generate a uninstallation script itself
 
