@@ -4,6 +4,8 @@
 
 NAME="Mesa3D-Driver" #Package/Extension Name
 
+CODENAME="your-unique-tag" #An Unique codename
+
 TYPE="Package" #Specify (Package / Extension)
 
 AUTHOR="AXON" #Your name as the Developer/Owner/Packer
