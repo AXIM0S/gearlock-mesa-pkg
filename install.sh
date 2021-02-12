@@ -1,7 +1,7 @@
 #!/gearlock/bin/bash
 ## Ready to use mesa installation script by @AXON
 ## I strictly provide the rights to use this script with GearLock only.
-## For proper developer documentation, visit https://supreme-gamers.com/gearlock
+## For proper developer documentation, visit https://wiki.supreme-gamers.com/gearlock/developer-guide
 # Check `!zygote.sh` to configure your package functions or gearlock can also guide you during the build process.
 
 
@@ -17,7 +17,7 @@ test "$COMPAT" != "yes" && geco "\n[!!!] Please update GearLock to install this"
 
 
 # Since building a mesa library which would work on any android version is quite impossible.
-# Thus we must verify the host system android version. An example is given below (variable ref: https://supreme-gamers.com/gearlock/environment-variables)
+# Thus we must verify the host system android version. An example is given below (variable ref: https://wiki.supreme-gamers.com/gearlock/developer-guide/environment-variables)
 
 MESA_ANDROID_VER="7" # Do not use a decimal number for this variable.
 if [[ ! "$ANDROID_VER" =~ "$MESA_ANDROID_VER" ]]; then
@@ -25,7 +25,7 @@ if [[ ! "$ANDROID_VER" =~ "$MESA_ANDROID_VER" ]]; then
 	geco "\n[!!!] This $VERSION Mesa3D drivers were build for android-${MESA_ANDROID_VER}."
 	geco "[!!!] But your android version is ${ANDROID_VER}, which could be incompatible with it."
 	read -rn1 -p "$(geco "++++ Do you wish to proceed ? [y/${GREEN}N${RC}]") " c
-	test "${c,,}" != 'y' && exit 101 #(exit-code ref: https://supreme-gamers.com/gearlock/#install-sh-exit-code)
+	test "${c,,}" != 'y' && exit 101 #(exit-code ref: https://wiki.supreme-gamers.com/gearlock/developer-guide/#install-sh-exit-code)
 	
 fi
 
